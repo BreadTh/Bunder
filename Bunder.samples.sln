@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30907.101
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bunder", "src\BreadTh.Bunder.csproj", "{AC7D2A15-7EC3-449A-AA5F-D855D56B129E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BreadTh.Bunder.samples", "sample\Bunder.samples.csproj", "{36CD644A-09C5-4B9B-A4F6-5C9E87E814E3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AC7D2A15-7EC3-449A-AA5F-D855D56B129E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC7D2A15-7EC3-449A-AA5F-D855D56B129E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC7D2A15-7EC3-449A-AA5F-D855D56B129E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC7D2A15-7EC3-449A-AA5F-D855D56B129E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36CD644A-09C5-4B9B-A4F6-5C9E87E814E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36CD644A-09C5-4B9B-A4F6-5C9E87E814E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36CD644A-09C5-4B9B-A4F6-5C9E87E814E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36CD644A-09C5-4B9B-A4F6-5C9E87E814E3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {923347BF-D9B4-400A-ACA3-277CAB186EFE}
+	EndGlobalSection
+EndGlobal
