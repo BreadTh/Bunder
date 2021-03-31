@@ -19,7 +19,7 @@
         internal string Rejected => setName + ".rejected";
         internal string Revive => setName + ".revive";
 
-        internal string Log => setName + ".log";
+        internal string Log => "_bunder.log";
 
         internal string DisplayName => setName;
     }
