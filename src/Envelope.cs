@@ -5,6 +5,9 @@ namespace BreadTh.Bunder
     [StronglyApiedRoot(DataModel.Json)]
     public class Envelope<T>
     {
+        [StronglyApiedString]
+        public string type = "bunder:asyncEnvelope";
+
         [StronglyApiedString()]
         public string traceId;
 

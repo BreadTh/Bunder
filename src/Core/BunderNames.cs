@@ -20,6 +20,7 @@
         internal string Revive => setName + ".revive";
 
         internal string Log => "_bunder.log";
+        internal string DirectToLog => setName + ".directToLog";
 
         internal string DisplayName => setName;
     }
