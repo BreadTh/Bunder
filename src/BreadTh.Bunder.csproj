@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
@@ -7,11 +7,11 @@
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/BreadTh/Bunder</PackageProjectUrl>
     <RepositoryUrl>https://github.com/BreadTh/Bunder</RepositoryUrl>
-    <Version>1.0.0.2</Version>
+    <Version>1.0.0.4</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BreadTh.StronglyApied" Version="2.0.0.6" />
+    <PackageReference Include="BreadTh.StronglyApied" Version="2.0.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="OneOf" Version="3.0.178" />
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" />

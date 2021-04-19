@@ -21,10 +21,10 @@ namespace BreadTh.Bunder
     
     public class EnqueueTime
     {
-        [StronglyApiedDateTime("yyyy/MM/dd HH':'mm':'ss'.'ff"), JsonConverter(typeof(SerializeDateFormatConverter), "yyyy/MM/dd HH':'mm':'ss'.'ff")]
+        [StronglyApiedDateTime(exactFormat: "yyyy/MM/dd HH':'mm':'ss'.'ff"), JsonConverter(typeof(SerializeDateFormatConverter), "yyyy/MM/dd HH':'mm':'ss'.'ff")]
         public DateTime original;
 
-        [StronglyApiedDateTime("yyyy/MM/dd HH':'mm':'ss'.'ff"), JsonConverter(typeof(SerializeDateFormatConverter), "yyyy/MM/dd HH':'mm':'ss'.'ff")]
+        [StronglyApiedDateTime(exactFormat: "yyyy/MM/dd HH':'mm':'ss'.'ff"), JsonConverter(typeof(SerializeDateFormatConverter), "yyyy/MM/dd HH':'mm':'ss'.'ff")]
         public DateTime latest;
     }
 }
