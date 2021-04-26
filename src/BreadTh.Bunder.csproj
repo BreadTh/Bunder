@@ -7,7 +7,7 @@
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/BreadTh/Bunder</PackageProjectUrl>
     <RepositoryUrl>https://github.com/BreadTh/Bunder</RepositoryUrl>
-    <Version>1.0.0.4</Version>
+    <Version>1.0.0.5</Version>
   </PropertyGroup>
 
   <ItemGroup>

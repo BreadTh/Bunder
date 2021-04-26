@@ -101,10 +101,11 @@ namespace BreadTh.Bunder
             ,   traceId = ExtendTraceId(traceId)
             ,   history = new MessageHistory
                 {   retryCounter = 0
-                ,   reasonForLatestStatusChange = ""
+                ,   status = "new"
+                ,   reasonForLatestStatusChange = "Enqueued"
                 ,   enqueueTime = new EnqueueTime
                     {   original = now
-                    ,   latest = now 
+                    ,   latest = now
                     }
                 }
             };
@@ -151,7 +152,6 @@ namespace BreadTh.Bunder
 
         private string ExtendTraceId(string traceId) =>
             (string.IsNullOrEmpty(traceId) ? "noExternalId" : traceId) + ":" + Convert.ToBase64String(Guid.NewGuid().ToByteArray()).TrimEnd('=');
-
 
         public void AddListener(Func<Envelope<TMessage>, Task<ConsumptionOutcome>> handler)
         {
@@ -210,7 +210,8 @@ namespace BreadTh.Bunder
             props.DeliveryMode = 2;
 
             envelope.history.enqueueTime.latest = DateTime.UtcNow;
-            envelope.history.reasonForLatestStatusChange = success.Reason ?? "";
+            envelope.history.status = "completed";
+            envelope.history.reasonForLatestStatusChange = success.Reason ?? "[No reason given]";
 
             var messageBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(envelope));
             sendingChannel.BasicPublish(_names.Complete, "", props, messageBytes);
@@ -232,7 +233,8 @@ namespace BreadTh.Bunder
             };
 
             envelope.history.retryCounter++;
-            envelope.history.reasonForLatestStatusChange = retry.Reason ?? "";
+            envelope.history.status = "retry";
+            envelope.history.reasonForLatestStatusChange = retry.Reason ?? "[no reason given]";
             envelope.history.enqueueTime.latest = DateTime.UtcNow;
 
             var messageBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(envelope));
@@ -254,6 +256,7 @@ namespace BreadTh.Bunder
             var props = sendingChannel.CreateBasicProperties();
             props.DeliveryMode = 2;
 
+            envelope.history.status = "reject";
             envelope.history.reasonForLatestStatusChange = reason ?? "";
             envelope.history.enqueueTime.latest = DateTime.UtcNow;
 

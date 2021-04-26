@@ -16,7 +16,11 @@ namespace BreadTh.Bunder
         public EnqueueTime enqueueTime;
 
         [StronglyApiedString]
+        public string status;
+
+        [StronglyApiedString]
         public string reasonForLatestStatusChange;
+        
     }
     
     public class EnqueueTime
