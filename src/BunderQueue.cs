@@ -257,7 +257,7 @@ namespace BreadTh.Bunder
             props.DeliveryMode = 2;
 
             envelope.history.status = "reject";
-            envelope.history.reasonForLatestStatusChange = reason ?? "";
+            envelope.history.reasonForLatestStatusChange = reason ?? "[no reason given]";
             envelope.history.enqueueTime.latest = DateTime.UtcNow;
 
             var messageBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(envelope));
