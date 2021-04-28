@@ -3,13 +3,16 @@
     public class BunderFactory
     {
         private readonly BunderMultiplexer _connection;
-        public BunderFactory(BunderMultiplexer connection)
+        private readonly string _processorName;
+
+        public BunderFactory(BunderMultiplexer connection, string processorName)
         {
             _connection = connection;
+            _processorName = processorName;
         }
 
-        public BunderQueue<T> Create<T>(string name) where T : class =>
-            new (name, _connection);
+        public BunderQueue<T> Create<T>(string queueName) where T : class =>
+            new (queueName, _connection, _processorName);
 
     }
 }

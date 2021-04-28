@@ -15,6 +15,9 @@ namespace BreadTh.Bunder
         public T letter;
        
         [StronglyApiedObject()]
-        public MessageHistory history;
+        public EnvelopeHistory history;
+
+        [StronglyApiedObject()]
+        public EnvelopeStatus status;
     }
 }

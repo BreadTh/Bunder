@@ -43,7 +43,7 @@ async Task<ConsumptionOutcome> RacerAttemptConsumer(Envelope<Participant> envelo
 
 
 BunderQueue<Participant> bunderQueue = 
-    new(name: "bunder-demo.racer", connection: new BunderMultiplexer(new ConnectionFactory { HostName = "localhost" }));
+    new(queueName: "bunder-demo.racer", connection: new BunderMultiplexer(new ConnectionFactory { HostName = "localhost" }), "racerConsumer.development");
 
 
 void EnqueueName(string name)
@@ -63,10 +63,6 @@ void EnqueueName(string name)
             (PublishFailure f) => throw new Exception($"Could not enqueue message because: {f.Reason}")
         );
 }
-
-
-bunderQueue.Undeclare(); //You don't need to do this. In fact, you probably shouldn't be doing this in prod.
-//It's useful when you're noodling around with the program, though.
 
 bunderQueue.Declare();//Only needs to be done once, but is idempotent.
 //Will throw if the existing declarations are not the same as- and clash with these declarations.

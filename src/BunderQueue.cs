@@ -13,13 +13,15 @@ namespace BreadTh.Bunder
 {
     public class BunderQueue<TMessage> where TMessage : class
     {
-        private readonly BunderNames _names;
+        private readonly BunderNames _bunderNames;
         private readonly BunderMultiplexer _connection;
+        private readonly string _processorName;
         
-        public BunderQueue(string name, BunderMultiplexer connection)
+        public BunderQueue(string queueName, BunderMultiplexer connection, string processorName)
         {
-            _names = new BunderNames(name);
+            _bunderNames = new BunderNames(queueName);
             _connection = connection;
+            _processorName = processorName;
         }
 
         public void Declare()
@@ -35,78 +37,73 @@ namespace BreadTh.Bunder
             void QueueBind(string queueName, string exchangeName) =>
                 channel.QueueBind(queueName, exchangeName, "");
 
+            void ExchangeBind(string toExchangeName, string fromExchangeName) =>
+                channel.ExchangeBind(toExchangeName, fromExchangeName, "");
+
 
             //Declare the core queue itself
-            ExchangeDeclare(_names.New);
-            QueueDeclare(_names.Ready);
-            QueueBind(_names.Ready, _names.New);
+            ExchangeDeclare(_bunderNames.New);
+            QueueDeclare(_bunderNames.Ready);
+            QueueBind(_bunderNames.Ready, _bunderNames.New);
             
             
             //reject
-            ExchangeDeclare(_names.Reject);
-            QueueDeclare(_names.Rejected);
-            QueueBind(_names.Rejected, _names.Reject);
-            ExchangeDeclare(_names.Revive);
-            QueueBind(_names.Ready, _names.Revive);
-            //Don't actually connect revive with rejected. That's done with a manual shovel.
+            ExchangeDeclare(_bunderNames.Reject);
+            QueueDeclare(_bunderNames.Rejected);
+            QueueBind(_bunderNames.Rejected, _bunderNames.Reject);
+            ExchangeDeclare(_bunderNames.Revive);
+            QueueBind(_bunderNames.Ready, _bunderNames.Revive);
+            //Don't actually connect revive with rejected. That's done with a manual shovel, when whatever caused the reject is fixed.
 
 
             //Timeout and retry
-            ExchangeDeclare(_names.DelayedRetry);
-            channel.ExchangeDeclare(_names.Delay, "x-delayed-message", true, false,
+            ExchangeDeclare(_bunderNames.Retry);
+            channel.ExchangeDeclare(_bunderNames.TimedOut, "x-delayed-message", true, false,
                 new Dictionary<string, object>{{"x-delayed-type", "fanout"}});
-            channel.ExchangeBind(_names.Delay, _names.DelayedRetry, "");
-            QueueBind(_names.Ready, _names.Delay);
+            channel.ExchangeBind(_bunderNames.TimedOut, _bunderNames.Retry, "");
+            QueueBind(_bunderNames.Ready, _bunderNames.TimedOut);
 
 
             //Logging components
-            QueueDeclare(_names.Log);
-            ExchangeDeclare(_names.Complete);
-            ExchangeDeclare(_names.DirectToLog);
+            ExchangeDeclare(_bunderNames.Complete);
+            ExchangeDeclare(_bunderNames.Log);
+
+            ExchangeDeclare(_bunderNames.SharedLog);
+            ExchangeDeclare(_bunderNames.SharedNew);
+            ExchangeDeclare(_bunderNames.SharedRetry);
+            ExchangeDeclare(_bunderNames.SharedResume);
+            ExchangeDeclare(_bunderNames.SharedReject);
+            ExchangeDeclare(_bunderNames.SharedRevive);
+            ExchangeDeclare(_bunderNames.SharedCompleted);
 
 
-            //log binding
-            QueueBind(_names.Log, _names.Complete);
-            QueueBind(_names.Log, _names.DirectToLog);
-            QueueBind(_names.Log, _names.Reject);
-            QueueBind(_names.Log, _names.DelayedRetry);
-            QueueBind(_names.Log, _names.Delay);
-            QueueBind(_names.Log, _names.New);
-            QueueBind(_names.Log, _names.Revive);
+            //Logging binding
+            ExchangeBind(_bunderNames.SharedNew, _bunderNames.New);
+            ExchangeBind(_bunderNames.SharedRetry, _bunderNames.Retry);
+            ExchangeBind(_bunderNames.SharedResume, _bunderNames.TimedOut);
+            ExchangeBind(_bunderNames.SharedReject, _bunderNames.Reject);
+            ExchangeBind(_bunderNames.SharedRevive, _bunderNames.Revive);
+            ExchangeBind(_bunderNames.SharedCompleted, _bunderNames.Complete);
+            ExchangeBind(_bunderNames.SharedLog, _bunderNames.Log);
         }
 
-        public void Undeclare()
-        {
-            using var channel = _connection.CreateChannelOrThrow();
-            
-            channel.ExchangeDelete(_names.New);
-            channel.ExchangeDelete(_names.DelayedRetry);
-            channel.ExchangeDelete(_names.Delay);
-            channel.ExchangeDelete(_names.DirectToLog);
-            channel.ExchangeDelete(_names.Complete);
-            channel.ExchangeDelete(_names.Reject);
-            channel.ExchangeDelete(_names.Revive);
-
-            channel.QueueDelete(_names.Ready);
-            channel.QueueDelete(_names.Rejected);
-
-            //Don't delete _names.Log as it is shared.
-        }
-       
         public EnqueueOutcome Enqueue(TMessage message, string traceId)
         {
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             Envelope<TMessage> envelope = new()
             {   letter = message
             ,   traceId = ExtendTraceId(traceId)
-            ,   history = new MessageHistory
+            ,   history = new EnvelopeHistory
                 {   retryCounter = 0
-                ,   status = "new"
-                ,   reasonForLatestStatusChange = "Enqueued"
                 ,   enqueueTime = new EnqueueTime
                     {   original = now
                     ,   latest = now
                     }
+                }
+            ,   status = new EnvelopeStatus
+                {   value = "new"
+                ,   reasonForLatestChange = "Enqueued"
+                ,   updatedBy = _processorName
                 }
             };
             
@@ -119,7 +116,7 @@ namespace BreadTh.Bunder
             props.DeliveryMode = 2;
             props.ContentType = "text/plain";
            
-            channel.BasicPublish(_names.New, "", props, messageBody);
+            channel.BasicPublish(_bunderNames.New, "", props, messageBody);
             
             if (channel.WaitForConfirms())
                 return new PublishSuccess();
@@ -131,7 +128,7 @@ namespace BreadTh.Bunder
         {
             var messageBody = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
             {   type = type is null ? "bunder:log" : "bunder:log:" + type,
-                bunderName = _names.DisplayName,
+                bunderName = _bunderNames.DisplayName,
                 traceId = ExtendTraceId(traceId),
                 message = message
             }));
@@ -143,7 +140,7 @@ namespace BreadTh.Bunder
             props.DeliveryMode = 2;
             props.ContentType = "text/plain";
 
-            channel.BasicPublish(_names.DirectToLog, "", props, messageBody);
+            channel.BasicPublish(_bunderNames.Log, "", props, messageBody);
             var abc = channel.WaitForConfirms();
             //Even though we want to ensure that the message is queued before we dispose the channel,
             //we don't want to use the outcome as the program should be unaffected by logging failures.
@@ -197,7 +194,7 @@ namespace BreadTh.Bunder
                     (ConsumptionReject rejection) => Reject(channel, args.DeliveryTag, envelope, rejection.Reason));
             };
 
-            channel.BasicConsume(queue: _names.Ready, autoAck: false, consumer: consumer);
+            channel.BasicConsume(queue: _bunderNames.Ready, autoAck: false, consumer: consumer);
         }
 
         private void Success(IModel originChannel, ulong deliveryTag, Envelope<TMessage> envelope, ConsumptionSuccess success)
@@ -209,12 +206,13 @@ namespace BreadTh.Bunder
             var props = sendingChannel.CreateBasicProperties();
             props.DeliveryMode = 2;
 
-            envelope.history.enqueueTime.latest = DateTime.UtcNow;
-            envelope.history.status = "completed";
-            envelope.history.reasonForLatestStatusChange = success.Reason ?? "[No reason given]";
+            envelope.history.enqueueTime.latest = DateTime.Now;
+            envelope.status.value = "completed";
+            envelope.status.reasonForLatestChange = success.Reason ?? "[No reason given]";
+            envelope.status.updatedBy = _processorName;
 
             var messageBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(envelope));
-            sendingChannel.BasicPublish(_names.Complete, "", props, messageBytes);
+            sendingChannel.BasicPublish(_bunderNames.Complete, "", props, messageBytes);
             //waiting for ack does not make any sense here as we would do the same regardless if we got ack or nack.
             //That is to just carry on. 
         }
@@ -233,12 +231,13 @@ namespace BreadTh.Bunder
             };
 
             envelope.history.retryCounter++;
-            envelope.history.status = "retry";
-            envelope.history.reasonForLatestStatusChange = retry.Reason ?? "[no reason given]";
-            envelope.history.enqueueTime.latest = DateTime.UtcNow;
+            envelope.history.enqueueTime.latest = DateTime.Now;
+            envelope.status.value = "retry";
+            envelope.status.reasonForLatestChange = retry.Reason ?? "[no reason given]";
+            envelope.status.updatedBy = _processorName;
 
             var messageBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(envelope));
-            sendingChannel.BasicPublish(_names.DelayedRetry, "", props, messageBytes);
+            sendingChannel.BasicPublish(_bunderNames.Retry, "", props, messageBytes);
 
             if (sendingChannel.WaitForConfirms())
                 originChannel.BasicAck(deliveryTag, false);
@@ -256,12 +255,13 @@ namespace BreadTh.Bunder
             var props = sendingChannel.CreateBasicProperties();
             props.DeliveryMode = 2;
 
-            envelope.history.status = "reject";
-            envelope.history.reasonForLatestStatusChange = reason ?? "[no reason given]";
-            envelope.history.enqueueTime.latest = DateTime.UtcNow;
+            envelope.status.value = "reject";
+            envelope.status.reasonForLatestChange = reason ?? "[no reason given]";
+            envelope.status.updatedBy = _processorName;
+            envelope.history.enqueueTime.latest = DateTime.Now;
 
             var messageBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(envelope));
-            sendingChannel.BasicPublish(_names.Reject, "", props, messageBytes);
+            sendingChannel.BasicPublish(_bunderNames.Reject, "", props, messageBytes);
 
             if (sendingChannel.WaitForConfirms())
                 originChannel.BasicAck(deliveryTag, false);

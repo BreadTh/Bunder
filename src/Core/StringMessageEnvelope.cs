@@ -12,6 +12,6 @@ namespace BreadTh.Bunder.Core
         public string message;
 
         [StronglyApiedObject]
-        public MessageHistory history;
+        public EnvelopeHistory history;
     }
 }

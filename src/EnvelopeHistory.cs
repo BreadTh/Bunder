@@ -7,20 +7,13 @@ using BreadTh.Bunder.Helpers;
 
 namespace BreadTh.Bunder
 {
-    public class MessageHistory
+    public class EnvelopeHistory
     {
         [StronglyApiedInt]
         public int retryCounter;
 
         [StronglyApiedObject]
-        public EnqueueTime enqueueTime;
-
-        [StronglyApiedString]
-        public string status;
-
-        [StronglyApiedString]
-        public string reasonForLatestStatusChange;
-        
+        public EnqueueTime enqueueTime;        
     }
     
     public class EnqueueTime
@@ -30,5 +23,17 @@ namespace BreadTh.Bunder
 
         [StronglyApiedDateTime(exactFormat: "yyyy/MM/dd HH':'mm':'ss'.'ff"), JsonConverter(typeof(SerializeDateFormatConverter), "yyyy/MM/dd HH':'mm':'ss'.'ff")]
         public DateTime latest;
+    }
+
+    public class EnvelopeStatus
+    {
+        [StronglyApiedString]
+        public string value;
+
+        [StronglyApiedString]
+        public string reasonForLatestChange;
+
+        [StronglyApiedString]
+        public string updatedBy;
     }
 }
