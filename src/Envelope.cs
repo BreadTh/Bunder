@@ -8,6 +8,9 @@ namespace BreadTh.Bunder
         [StronglyApiedString]
         public string type = "bunder:asyncEnvelope";
 
+        [StronglyApiedString]
+        public string queue;
+
         [StronglyApiedString()]
         public string traceId;
 

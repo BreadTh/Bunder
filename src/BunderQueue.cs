@@ -74,7 +74,7 @@ namespace BreadTh.Bunder
             ExchangeDeclare(_bunderNames.SharedResume);
             ExchangeDeclare(_bunderNames.SharedReject);
             ExchangeDeclare(_bunderNames.SharedRevive);
-            ExchangeDeclare(_bunderNames.SharedCompleted);
+            ExchangeDeclare(_bunderNames.SharedComplete);
 
 
             //Logging binding
@@ -83,7 +83,7 @@ namespace BreadTh.Bunder
             ExchangeBind(_bunderNames.SharedResume, _bunderNames.TimedOut);
             ExchangeBind(_bunderNames.SharedReject, _bunderNames.Reject);
             ExchangeBind(_bunderNames.SharedRevive, _bunderNames.Revive);
-            ExchangeBind(_bunderNames.SharedCompleted, _bunderNames.Complete);
+            ExchangeBind(_bunderNames.SharedComplete, _bunderNames.Complete);
             ExchangeBind(_bunderNames.SharedLog, _bunderNames.Log);
         }
 
@@ -92,6 +92,7 @@ namespace BreadTh.Bunder
             var now = DateTime.Now;
             Envelope<TMessage> envelope = new()
             {   letter = message
+            ,   queue = _bunderNames.DisplayName
             ,   traceId = ExtendTraceId(traceId)
             ,   history = new EnvelopeHistory
                 {   retryCounter = 0

@@ -29,7 +29,6 @@
         internal string SharedResume => "bunder.resume";
         internal string SharedReject => "bunder.reject";
         internal string SharedRevive => "bunder.revive";
-        internal string SharedCompleted => "bunder.completed";
-        
+        internal string SharedComplete => "bunder.complete";
     }
 }
