@@ -256,10 +256,11 @@ namespace BreadTh.Bunder
             var props = sendingChannel.CreateBasicProperties();
             props.DeliveryMode = 2;
 
+            envelope.history.retryCounter++;
+            envelope.history.enqueueTime.latest = DateTime.Now;
             envelope.status.value = "reject";
             envelope.status.reasonForLatestChange = reason ?? "[no reason given]";
             envelope.status.updatedBy = _processorName;
-            envelope.history.enqueueTime.latest = DateTime.Now;
 
             var messageBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(envelope));
             sendingChannel.BasicPublish(_bunderNames.Reject, "", props, messageBytes);
