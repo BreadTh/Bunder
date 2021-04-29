@@ -130,7 +130,7 @@ namespace BreadTh.Bunder
             var messageBody = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
             {   type = type is null ? "bunder:log" : "bunder:log:" + type,
                 bunderName = _bunderNames.DisplayName,
-                traceId = ExtendTraceId(traceId),
+                traceId = traceId,
                 message = message
             }));
 
