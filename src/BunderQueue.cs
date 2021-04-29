@@ -161,36 +161,45 @@ namespace BreadTh.Bunder
 
             consumer.Received += async (_, args) =>
             {
-                if (args is null)
-                    throw new ArgumentNullException(nameof(args));
-
-                var (envelope, errors) =
-                    new ModelValidator().Parse<Envelope<TMessage>>(Encoding.UTF8.GetString(args.Body.ToArray()));
-
-                if (errors.Count != 0)
-                {
-                    Reject(channel, args.DeliveryTag, envelope
-                        , $"Model validation generated errors: {JsonConvert.SerializeObject(errors)}");
-                    return;
-                }
-
-                ConsumptionOutcome handleMessageOutcome;
+                Envelope<TMessage> envelope = null;
+                
                 try
                 {
-                    handleMessageOutcome = await handler(envelope);
+                    List<ErrorDescription> errors = null;
+                    
+                    if (args is null)
+                        throw new ArgumentNullException(nameof(args));
+
+                    (envelope, errors) =
+                        new ModelValidator().Parse<Envelope<TMessage>>(Encoding.UTF8.GetString(args.Body.ToArray()));
+
+                    if (errors.Count != 0)
+                    {
+                        Reject(channel, args.DeliveryTag, envelope
+                            , $"Model validation generated errors: {JsonConvert.SerializeObject(errors)}");
+                        return;
+                    }
+
+                    ConsumptionOutcome handleMessageOutcome = await handler(envelope);
+
+                    //Note: We must (n)ack a message on the same channel as it was received on, so we need to pass in the channel.
+                    //Though we can't send new messages on that same channel.
+                    handleMessageOutcome.Switch(
+                        (ConsumptionSuccess success) => Success(channel, args.DeliveryTag, envelope, success),
+                        (ConsumptionRetry retry) => Retry(channel, args.DeliveryTag, envelope, retry),
+                        (ConsumptionReject rejection) => Reject(channel, args.DeliveryTag, envelope, rejection.Reason));
                 }
                 catch (Exception e)
                 {
-                    Reject(channel, args.DeliveryTag, envelope, $"Listener threw exception: {e}");
-                    return;
+                    try 
+                    {
+                        Reject(channel, args.DeliveryTag, envelope, $"Listener threw exception: {e}");
+                    }
+                    catch
+                    {
+                        //Give up trying to report the failure. Just let the message silently fail.
+                    }
                 }
-
-                //Note: We must (n)ack a message on the same channel as it was received on, so we need to pass in the channel.
-                //Though we can't send new messages on that same channel.
-                handleMessageOutcome.Switch(
-                    (ConsumptionSuccess success) => Success(channel, args.DeliveryTag, envelope, success),
-                    (ConsumptionRetry retry) => Retry(channel, args.DeliveryTag, envelope, retry),
-                    (ConsumptionReject rejection) => Reject(channel, args.DeliveryTag, envelope, rejection.Reason));
             };
 
             channel.BasicConsume(queue: _bunderNames.Ready, autoAck: false, consumer: consumer);
