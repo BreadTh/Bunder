@@ -24,6 +24,9 @@ namespace BreadTh.Bunder
             _processorName = processorName;
         }
 
+        public string GetProcessorName() =>
+            _processorName;
+
         public void Declare()
         {
             using var channel = _connection.CreateChannelOrThrow();
@@ -125,14 +128,9 @@ namespace BreadTh.Bunder
             return new PublishFailure("message was never confirmed");
         }
 
-        public void Log(object message, string traceId, string type = null)
+        public void Log(Envelope<TMessage> message)
         {
-            var messageBody = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
-            {   type = type is null ? "bunder:log" : "bunder:log:" + type,
-                bunderName = _bunderNames.DisplayName,
-                traceId = traceId,
-                message = message
-            }));
+            var messageBody = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
 
             using var channel = _connection.CreateChannelOrThrow();
             channel.ConfirmSelect();
