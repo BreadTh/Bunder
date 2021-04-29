@@ -149,7 +149,7 @@ namespace BreadTh.Bunder
         }
 
         private string ExtendTraceId(string traceId) =>
-            (string.IsNullOrEmpty(traceId) ? "noExternalId" : traceId) + ":" + Convert.ToBase64String(Guid.NewGuid().ToByteArray()).TrimEnd('=');
+            (string.IsNullOrEmpty(traceId) ? "noExternalId" : traceId) + ";" + Convert.ToBase64String(Guid.NewGuid().ToByteArray()).TrimEnd('=').Replace('/', '_').Replace('+', '&');
 
         public void AddListener(Func<Envelope<TMessage>, Task<ConsumptionOutcome>> handler)
         {
