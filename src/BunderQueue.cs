@@ -27,6 +27,9 @@ namespace BreadTh.Bunder
         public string GetProcessorName() =>
             _processorName;
 
+        public string GetQueueName() =>
+            _bunderNames.DisplayName;
+
         public void Declare()
         {
             using var channel = _connection.CreateChannelOrThrow();

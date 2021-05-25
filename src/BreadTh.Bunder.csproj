@@ -7,13 +7,13 @@
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/BreadTh/Bunder</PackageProjectUrl>
     <RepositoryUrl>https://github.com/BreadTh/Bunder</RepositoryUrl>
-    <Version>1.0.0.18</Version>
-    <AssemblyVersion>1.0.0.18</AssemblyVersion>
-    <FileVersion>1.0.0.18</FileVersion>
+    <Version>1.0.0.20</Version>
+    <AssemblyVersion>1.0.0.20</AssemblyVersion>
+    <FileVersion>1.0.0.20</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BreadTh.StronglyApied" Version="2.0.0.7" />
+    <PackageReference Include="BreadTh.StronglyApied" Version="2.0.0.8" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="OneOf" Version="3.0.178" />
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" />
