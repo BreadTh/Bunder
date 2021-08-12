@@ -159,6 +159,7 @@ namespace BreadTh.Bunder
 
             //Don't dispose - The channel needs to stay open for the listener to remain active.
             var channel = _connection.CreateChannelOrThrow();
+            channel.BasicQos(0,1, false);
 
             EventingBasicConsumer consumer = new(channel);
 
@@ -194,14 +195,7 @@ namespace BreadTh.Bunder
                 }
                 catch (Exception e)
                 {
-                    try 
-                    {
-                        Reject(channel, args.DeliveryTag, envelope, $"Listener threw exception: {e}");
-                    }
-                    catch
-                    {
-                        //Give up trying to report the failure. Just let the message silently fail.
-                    }
+                    Reject(channel, args.DeliveryTag, envelope, $"Listener threw exception: {e}");
                 }
             };
 
@@ -260,6 +254,22 @@ namespace BreadTh.Bunder
 
         private void Reject(IModel originChannel, ulong deliveryTag, Envelope<TMessage> envelope, string reason)
         {
+            //If the reject reason is that the envelope failed to be parsed, we need to create one
+            if(envelope is null)
+                envelope = new Envelope<TMessage>()
+                {
+                    status = new EnvelopeStatus(),
+                    queue = "Exception",
+                    history = new EnvelopeHistory()
+                    {
+                        retryCounter = 0,
+                        enqueueTime = new EnqueueTime(),
+                    },
+                    letter = null,
+                    type = "Exception",
+                    traceId = Guid.Empty.ToString(), 
+                };
+            
             using var sendingChannel = _connection.CreateChannelOrThrow();
             sendingChannel.ConfirmSelect();
 
@@ -275,14 +285,9 @@ namespace BreadTh.Bunder
             var messageBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(envelope));
             sendingChannel.BasicPublish(_bunderNames.Reject, "", props, messageBytes);
 
-            if (sendingChannel.WaitForConfirms())
-                originChannel.BasicAck(deliveryTag, false);
-            else
-                //If the message couldn't be put in the reject exchange, the next best thing we can
-                //do is to nack it without requeue which ultimately also puts it in the deadletter queue
-                //but through the expiration exchange, which is not what we wanted to do.
-                //Still an acceptable fallback.
-                originChannel.BasicNack(deliveryTag, false, false);
+            sendingChannel.WaitForConfirms();
+            originChannel.BasicAck(deliveryTag, false);
+
         }
     }
 }
